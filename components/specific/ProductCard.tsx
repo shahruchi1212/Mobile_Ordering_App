@@ -92,7 +92,6 @@ export const ProductCard: React.FC<Props> = ({
   // ------------------------------------
   
   return (
-    // Main pressable wrapper
     <Pressable style={themedStyles.card} onPress={handleDetailsPress}> 
       <Image 
         style={themedStyles.image}

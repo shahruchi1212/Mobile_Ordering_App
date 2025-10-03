@@ -1,4 +1,4 @@
-// app/(stack)/_layout.tsx (Updated)
+
 import { Stack } from 'expo-router';
 import React from 'react';
 import { CustomHeader } from '../../components/base/CustomHeader'; // Import the custom component

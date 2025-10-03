@@ -1,6 +1,9 @@
-// store/ThemeContext.tsx
-import React, { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+
+
+const THEME_STORAGE_KEY = '@app_theme';
 
 export const lightTheme = {
   colors: {
@@ -32,7 +35,7 @@ export const darkTheme = {
   statusBarStyle: 'light', 
 };
 
-// --- Context Type ---
+
 type Theme = typeof lightTheme;
 type ThemeName = 'light' | 'dark';
 
@@ -46,7 +49,35 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [themeName, setThemeName] = useState<ThemeName>('light');
+  const [themeName, setThemeName] = useState<ThemeName | null>(null);
+
+
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const storedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+        if (storedTheme === 'light' || storedTheme === 'dark') {
+          setThemeName(storedTheme);
+        } else {
+          setThemeName('light');
+        }
+      } catch (error) {
+        console.error('Failed to load theme from storage:', error);
+        setThemeName('light'); // Fallback
+      }
+    };
+    loadTheme();
+  }, []);
+
+
+  useEffect(() => {
+    if (themeName !== null) {
+      AsyncStorage.setItem(THEME_STORAGE_KEY, themeName)
+        .catch(error => console.error('Failed to save theme to storage:', error));
+    }
+  }, [themeName]);
+
+
 
   const theme = useMemo(() => (themeName === 'light' ? lightTheme : darkTheme), [themeName]);
 
@@ -54,11 +85,17 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setThemeName(prevName => (prevName === 'light' ? 'dark' : 'light'));
   };
 
+ 
   const contextValue = useMemo(() => ({
     theme,
-    themeName,
+    themeName: (themeName || 'light') as ThemeName, 
     toggleTheme,
   }), [theme, themeName]);
+
+
+  if (themeName === null) {
+    return null; 
+  }
 
   return (
     <ThemeContext.Provider value={contextValue}>

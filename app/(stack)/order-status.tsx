@@ -1,3 +1,4 @@
+import { sendLocalOrderNotification } from '@/hooks/useNotifications';
 import { FontAwesome } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -35,23 +36,28 @@ export default function OrderStatusScreen() {
     const [currentStatus, setCurrentStatus] = useState<OrderStatus>('PENDING');
 
     useEffect(() => {
-        // Simulate status updates over 6 seconds
-        if (currentStatus !== 'DELIVERED') {
-            const timer1 = setTimeout(() => {
-                setCurrentStatus('EN_ROUTE');
-                
-            }, 3000);
+      
+        sendLocalOrderNotification('PENDING');
+        
+        const timer1 = setTimeout(() => {
+            const nextStatus: OrderStatus = 'EN_ROUTE';
+            setCurrentStatus(nextStatus);
+            sendLocalOrderNotification(nextStatus); 
+        }, 3000);
 
-            const timer2 = setTimeout(() => {
-                setCurrentStatus('DELIVERED');
-            }, 6000);
+      
+        const timer2 = setTimeout(() => {
+            const nextStatus: OrderStatus = 'DELIVERED';
+            setCurrentStatus(nextStatus);
+            sendLocalOrderNotification(nextStatus); 
+        }, 6000);
 
-            return () => {
-                clearTimeout(timer1);
-                clearTimeout(timer2);
-            };
-        }
-    }, [currentStatus]);
+        return () => {
+            clearTimeout(timer1);
+            clearTimeout(timer2);
+        };
+        
+    }, []); 
 
     const handleGoHome = () => {
         router.replace('../(tabs)');
@@ -100,7 +106,6 @@ export default function OrderStatusScreen() {
                 </View>
 
                 {currentStatus === 'DELIVERED' && (
-                    // Use themedStyles.deliveryBox without trying to access themeName
                     <View style={[themedStyles.deliveryBox, { borderColor: STATUS_STEPS[2].color }]}>
                         <Text style={[themedStyles.deliveryText, { color: STATUS_STEPS[2].color }]}>
                             Your order is complete! Total Paid: **${total}**
