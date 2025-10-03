@@ -1,98 +1,173 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ActivityIndicator, Button, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { ScreenContainer } from '@/components/base/ScreenContainer';
+
+import { ProductCard } from '@/components/specific/ProductCard';
+import { fetchProducts, Product } from '@/services/api';
+import { useFetchData } from '../../hooks/useFetchData';
+import { useCart } from '../../store/CartContext';
+import { useTheme } from '../../store/ThemeContext';
+
+type ThemePlaceholder = ReturnType<typeof useTheme>['theme'];
+
+const CartButton: React.FC = () => {
+    const { cartItems } = useCart();
+    const { theme, themeName } = useTheme();
+    const themedStyles = createThemedStyles(theme as unknown as ThemePlaceholder, themeName);
+
+    const router = useRouter();
+    const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+    return (
+        <View style={themedStyles.cartButtonContainer}>
+            <Pressable style={themedStyles.cartButton} onPress={() => router.navigate('/(stack)/request-product')}>
+                <FontAwesome name="shopping-cart" size={24} color="#fff" />
+                <View style={themedStyles.badge}>
+                    <Text style={themedStyles.badgeText}>{cartCount}</Text>
+                </View>
+            </Pressable>
+        </View>
+    );
+};
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { theme, themeName } = useTheme();
+  const themedStyles = createThemedStyles(theme as unknown as ThemePlaceholder, themeName);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const { data: products, loading, error, refetch } = useFetchData<Product[]>(fetchProducts);
+  const { cartItems, addToCart, updateQuantity } = useCart();
+  const router = useRouter();
+
+  const handleAddToCart = (product: Product) => {
+    addToCart(product, 1);
+    router.navigate('/(stack)/request-product');
+  };
+
+  const getProductQuantity = (productId: number): number => {
+    return cartItems.find(item => item.id === productId)?.quantity || 0;
+  };
+  
+  const handleQuantityChange = (productId: number, newQuantity: number) => {
+      updateQuantity(productId, newQuantity); 
+  };
+
+  const handleViewDetails = (product: Product) => {
+    router.navigate('/(stack)/request-product'); 
+  };
+  
+
+  if (loading) {
+    return (
+      <ScreenContainer scrollable={false}>
+        <View style={themedStyles.center}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={themedStyles.loadingText}>Fetching delicious products...</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <ScreenContainer scrollable={false}>
+        <View style={themedStyles.center}>
+          <Text style={themedStyles.errorText}>Error: {error}</Text>
+          <Button 
+            title="Try Again" 
+            onPress={refetch} 
+            color={theme.colors.primary}
+          />
+        </View>
+      </ScreenContainer>
+    );
+  }
+  
+  return (
+    <ScreenContainer scrollable={false}>
+      <Text style={themedStyles.header}>⚡ Quick Order Products</Text>
+      <FlatList
+        data={products}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <ProductCard 
+            product={item} 
+            onAddToCart={handleAddToCart}
+            onQuantityChange={handleQuantityChange}
+            currentQuantity={getProductQuantity(item.id)}
+            onViewDetails={handleViewDetails}
+          />
+        )}
+        contentContainerStyle={themedStyles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
+      {cartItems.length > 0 && <CartButton />}
+    </ScreenContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+const createThemedStyles = (theme: ThemePlaceholder, themeName: string) => StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: theme.colors.subtleText,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  errorText: {
+    fontSize: 18,
+    color: theme.colors.warning,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: theme.colors.text,
+  },
+  listContent: {
+    paddingBottom: 80, 
+  },
+
+  cartButtonContainer: {
     position: 'absolute',
+    bottom: 20,
+    right: 20,
+    zIndex: 10,
   },
+  cartButton: {
+    backgroundColor: theme.colors.primary,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: themeName === 'light' ? 0.25 : 0.5, 
+    shadowRadius: 3.84,
+  },
+  badge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: theme.colors.warning,
+    borderRadius: 12, 
+    minWidth: 24, 
+    height: 24,
+    justifyContent: 'center', 
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: theme.colors.cardBackground,
+    fontWeight: 'bold',
+    fontSize: 14, 
+  }
 });
