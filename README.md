@@ -68,7 +68,7 @@ Here is the complete content for your README.md file.
 
 Markdown
 
-# 🍔 Mobile Ordering App (Quick Food Service)
+# Mobile Ordering App (Quick Order Service)
 
 Welcome to the repository for the **Mobile Ordering App**, a cross-platform (iOS and Android) solution built with Expo and React Native, focusing on a fast, themed, and efficient food ordering process.
 
