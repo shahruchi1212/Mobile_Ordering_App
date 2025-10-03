@@ -1,6 +1,6 @@
 #  Mobile Ordering App (Quick Order Service)
 
-Welcome to the repository for the **Mobile Ordering App**, a cross-platform (iOS and Android) solution built with Expo and React Native, focusing on a fast, themed, and efficient food ordering process.
+Welcome to the repository for the **Mobile Ordering App**, a cross-platform (iOS and Android) solution built with Expo and React Native, focusing on a fast, themed, and efficient ordering process.
 
 This project implements a full user flow from browsing products to placing an order, including persistent cart state, dynamic theming, and local notification mockups.
 
@@ -70,7 +70,7 @@ Markdown
 
 # Mobile Ordering App (Quick Order Service)
 
-Welcome to the repository for the **Mobile Ordering App**, a cross-platform (iOS and Android) solution built with Expo and React Native, focusing on a fast, themed, and efficient food ordering process.
+Welcome to the repository for the **Mobile Ordering App**, a cross-platform (iOS and Android) solution built with Expo and React Native, focusing on a fast, themed, and efficient  ordering process.
 
 This project implements a full user flow from browsing products to placing an order, including persistent cart state, dynamic theming, and local notification mockups.
 
